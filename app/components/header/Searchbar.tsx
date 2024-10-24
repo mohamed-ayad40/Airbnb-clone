@@ -1,13 +1,15 @@
 "use client";
 import { SearchIcon, UserIcon } from "@heroicons/react/solid";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "react-date-range/dist/styles.css"; // main style file
 import "react-date-range/dist/theme/default.css"; // theme css file
 import { DateRangePicker, RangeKeyDict } from "react-date-range";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const Searchbar = ({placeholder}: {placeholder?: string}) => {
   const [input, setInput] = useState("");
+  const router = useRouter();
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [numOfGuests, setNumOfGuests] = useState(1);
@@ -20,6 +22,28 @@ const Searchbar = ({placeholder}: {placeholder?: string}) => {
     setStartDate(ranges.selection.startDate as Date);
     setEndDate(ranges.selection.endDate as Date);
   };
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === "Enter" && input) {
+        // Manually build the search query string
+        const searchParams = new URLSearchParams({
+          location: input,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          numOfGuests: numOfGuests.toString(),
+        });
+
+        // Use router.push with the full URL string
+        router.push(`/search?${searchParams.toString()}`);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [input, startDate, endDate, numOfGuests, router]);
   return (
     <>
       <div className="flex items-center md:border-2 rounded-full py-2 md:shadow-sm">
@@ -40,8 +64,8 @@ const Searchbar = ({placeholder}: {placeholder?: string}) => {
             rangeColors={["#FD5B61"]}
             minDate={new Date()}
           />
-          <div className="flex items-center border-b bg-white">
-            <h2 className="text-2xl flex-grow font-semibold">
+          <div className="flex items-center border-b bg-white pb-3">
+            <h2 className="text-2xl flex-grow font-semibold text-center">
               Number of Guests
             </h2>
             <UserIcon className="h-5" />
@@ -53,7 +77,7 @@ const Searchbar = ({placeholder}: {placeholder?: string}) => {
               onChange={(e) => setNumOfGuests(Number(e.target.value))}
             />
           </div>
-          <div className="flex items-center bg-white p-5">
+          <div className="flex items-center bg-white p-5 text-center">
             <button
               type="button"
               className="flex-grow text-gray-500"
